@@ -2,6 +2,9 @@
 
 Bulk import notification routing rules into Gravity Forms from CSV or XLSX files.
 
+![Plugin Screenshot](https://github.com/guilamu/gf-notification-routing-importer/blob/main/Screenshot.png)
+
+
 ## Import
 
 - Upload a **CSV** or **XLSX** file to populate notification routing rules in bulk
