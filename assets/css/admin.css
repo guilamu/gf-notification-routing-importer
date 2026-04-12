@@ -1,0 +1,180 @@
+/**
+ * GF Notification Routing Importer — Admin CSS
+ *
+ * @package GF_Notification_Routing_Importer
+ */
+
+/* ── Import Container ─────────────────────────────────────── */
+
+#gfnri-import-container {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* ── Header: title + toggle ───────────────────────────────── */
+
+#gfnri-import-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.gfnri-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #3c434a;
+}
+
+/* ── Toggle switch (self-contained) ───────────────────────── */
+
+.gfnri-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.gfnri-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.gfnri-toggle__track {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.gfnri-toggle__track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.gfnri-toggle input[type="checkbox"]:checked + .gfnri-toggle__track {
+    background: #2271b1;
+}
+
+.gfnri-toggle input[type="checkbox"]:checked + .gfnri-toggle__track::after {
+    transform: translateX(16px);
+}
+
+.gfnri-toggle__label {
+    font-size: 13px;
+    color: #3c434a;
+    line-height: 1;
+}
+
+/* ── Drop zone (matches GF Chained Select style) ─────────── */
+
+#gfnri-dropzone {
+    border: 2px dashed #ddd;
+    line-height: 29px;
+    margin: 0 0 12px;
+    padding: 30px 0;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+}
+
+#gfnri-dropzone.gfnri-dragover {
+    border-color: #2271b1;
+}
+
+#gfnri-dropzone .gfnri-drop-instructions {
+    color: #3c434a;
+    font-size: 13px;
+}
+
+#gfnri-dropzone .button {
+    margin-left: 4px;
+}
+
+/* ── Sample file link ─────────────────────────────────────── */
+
+#gfnri-sample {
+    font-size: 13px;
+    color: #3c434a;
+    margin: 0 0 12px;
+}
+
+/* ── Export button ────────────────────────────────────────── */
+
+#gfnri-export {
+    margin: 0 0 12px;
+}
+
+#gfnri-sample a {
+    color: #2271b1;
+    text-decoration: none;
+}
+
+#gfnri-sample a:hover {
+    text-decoration: underline;
+}
+
+/* ── Status messages ──────────────────────────────────────── */
+
+#gfnri-status {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 6px;
+}
+
+.gfnri-status--success {
+    color: #00a32a;
+}
+
+.gfnri-status--error {
+    color: #d63638;
+}
+
+.gfnri-status--loading {
+    color: #2271b1;
+    font-style: italic;
+}
+
+/* ── Warnings ─────────────────────────────────────────────── */
+
+#gfnri-warnings {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #fcf0f1;
+    border: 1px solid #d63638;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #3c434a;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#gfnri-warnings strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #d63638;
+}
+
+#gfnri-warnings ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+#gfnri-warnings li {
+    margin-bottom: 2px;
+}

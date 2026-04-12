@@ -1,0 +1,188 @@
+# Copyright (C) 2026 Guilamu
+# This file is distributed under the AGPL-3.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Notification Routing Importer for Gravity Forms 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/guilamu/gf-notification-routing-importer/issues\n"
+"POT-Creation-Date: 2026-04-12T19:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#. Plugin Name of the plugin
+msgid "Notification Routing Importer for Gravity Forms"
+msgstr ""
+
+#. Description of the plugin
+msgid "Bulk import notification routing rules from CSV/XLSX files into Gravity Forms' \"Configure Routing\" feature."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Importing…"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "%d routing rule(s) imported successfully."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Import failed: %s"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Please select a CSV or XLSX file."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Append to existing"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Import Routing Rules"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Warnings:"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Drop your file here or"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Select a file"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Download a sample file:"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Export Routing Rules"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Permission denied."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Security check failed."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "No file uploaded or upload error."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Only CSV and XLSX files are allowed."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Invalid form ID."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Form not found."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Invalid XLSX file."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "File must have a header row and at least one data row."
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Row %1$d: invalid email \"%2$s\", skipped."
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Row %1$d: %2$s, skipped."
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Row %1$d: invalid operator \"%2$s\", skipped."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "No valid routing rules found in the file."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Failed to open CSV file."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "CSV file is empty."
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Missing required column(s): %s. Expected headers: email, fieldId (or field), operator, value."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "empty field ID"
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "field ID %s not found in form"
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "no field matching label \"%s\""
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "field ID %1$s is a %2$s field (not routable)"
+msgstr ""
+
+#: includes/class-xlsx-parser.php
+msgid "PHP ZipArchive extension is required for XLSX support."
+msgstr ""
+
+#: includes/class-xlsx-parser.php
+msgid "XLSX file not found."
+msgstr ""
+
+#: includes/class-xlsx-parser.php
+msgid "Failed to open XLSX file."
+msgstr ""
+
+#: includes/class-xlsx-parser.php
+msgid "No worksheet found in XLSX file."
+msgstr ""
+
+#: includes/class-xlsx-parser.php
+msgid "Failed to parse worksheet XML."
+msgstr ""
+
+#: includes/class-github-updater.php
+msgid "Unable to rename the update folder. Please retry or update manually."
+msgstr ""
+
+#: gf-notification-routing-importer.php
+msgid "More information about Notification Routing Importer for Gravity Forms"
+msgstr ""
+
+#: gf-notification-routing-importer.php
+msgid "View details"
+msgstr ""
+
+#: gf-notification-routing-importer.php
+msgid "🐛 Report a Bug"
+msgstr ""
+
+#: gf-notification-routing-importer.php
+msgid "🐛 Report a Bug (install Bug Reporter)"
+msgstr ""

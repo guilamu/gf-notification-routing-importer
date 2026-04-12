@@ -1,0 +1,8 @@
+email,field,operator,value
+sales@acme.com,Department,is,Sales
+support@acme.com,Department,is not,Sales
+eu@acme.com,{:7},contains,Europe
+{admin_email},Country,starts_with,Fr
+billing@acme.com,5,ends_with,Pro
+vip@acme.com,Total,greater than,1000
+discount@acme.com,Total,less than,50

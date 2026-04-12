@@ -1,0 +1,21 @@
+# Build artifacts
+build/
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Composer
+vendor/
+composer.lock
+
+# Node
+node_modules/
+package-lock.json
