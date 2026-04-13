@@ -96,14 +96,12 @@
     flex: 1;
 }
 
-.gfnri-gsheets-url-row .button {
-    flex-shrink: 0;
+.gfnri-gsheets-url-row select {
+    flex: 1;
 }
 
-.gfnri-gsheets-field--actions {
-    display: flex;
-    justify-content: flex-end;
-    max-width: 500px;
+.gfnri-gsheets-url-row .button {
+    flex-shrink: 0;
 }
 
 .gfnri-title {
