@@ -52,6 +52,8 @@ A bare number (e.g., `5`) is also accepted and treated as a field ID.
 
 ## Google Sheets Integration
 
+![Plugin Screenshot](https://github.com/guilamu/gf-notification-routing-importer/blob/main/Screenshot.2.png)
+
 > **Requires** the [GC Google Sheets](https://gravitywiz.com/documentation/gravity-forms-google-sheets/) plugin by GravityWiz.
 
 You can connect a Google Sheet as a live source for routing rules. Once connected, the plugin can keep your notification routing automatically in sync without any manual intervention.
