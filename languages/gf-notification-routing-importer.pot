@@ -2,7 +2,7 @@
 # This file is distributed under the AGPL-3.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Notification Routing Importer for Gravity Forms 1.0.0\n"
+"Project-Id-Version: Notification Routing Importer for Gravity Forms 1.1.0\n"
 "Report-Msgid-Bugs-To: https://github.com/guilamu/gf-notification-routing-importer/issues\n"
 "POT-Creation-Date: 2026-04-12T19:00:00+00:00\n"
 "MIME-Version: 1.0\n"
@@ -185,4 +185,151 @@ msgstr ""
 
 #: gf-notification-routing-importer.php
 msgid "🐛 Report a Bug (install Bug Reporter)"
+msgstr ""
+
+#. Google Sheets integration strings (class-import-handler.php)
+
+#: includes/class-import-handler.php
+msgid "Google Sheets"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Google Account"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Spreadsheet URL"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Paste your Google Sheets URL…"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Sheet Tab"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Load Sheets"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Import from Google Sheets"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Loading sheets…"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Select an account…"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Select a sheet tab…"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "No Google accounts connected. Connect one in GC Google Sheets settings."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Auto-sync"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Manual only"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Every 5 minutes"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Every 15 minutes"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Every 30 minutes"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Every hour"
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Last synced: %s"
+msgstr ""
+
+#: includes/class-import-handler.php
+#, php-format
+msgid "Sync error: %s"
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "GC Google Sheets is not available."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Please enter a spreadsheet URL."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Invalid Google Sheets URL."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Google account not found or not healthy."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Could not connect to spreadsheet."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "No sheets found in this spreadsheet."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Missing required parameters."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Could not read data from the sheet, or it is empty."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "Sheet must have a header row and at least one data row."
+msgstr ""
+
+#: includes/class-import-handler.php
+msgid "No valid routing rules found in the sheet."
+msgstr ""
+
+#. Cron strings (class-cron.php)
+
+#: includes/class-cron.php
+msgid "Invalid sheet URL."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "Google account not found or unhealthy."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "Could not connect."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "Sheet is empty or has no data rows."
+msgstr ""
+
+#: includes/class-cron.php
+msgid "No valid routing rules found."
+msgstr ""
+
+#: includes/class-cron.php
+#, php-format
+msgid "%d rule(s) synced."
 msgstr ""

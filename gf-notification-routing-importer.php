@@ -3,7 +3,7 @@
  * Plugin Name: Notification Routing Importer for Gravity Forms
  * Plugin URI: https://github.com/guilamu/gf-notification-routing-importer
  * Description: Bulk import notification routing rules from CSV/XLSX files into Gravity Forms' "Configure Routing" feature.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Guilamu
  * Author URI: https://github.com/guilamu
  * Text Domain: gf-notification-routing-importer
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants.
-define( 'GFNRI_VERSION', '1.0.0' );
+define( 'GFNRI_VERSION', '1.1.0' );
 define( 'GFNRI_PLUGIN_FILE', plugin_basename( __FILE__ ) );
 define( 'GFNRI_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GFNRI_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -29,6 +29,7 @@ define( 'GFNRI_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 require_once GFNRI_PLUGIN_PATH . 'includes/class-github-updater.php';
 require_once GFNRI_PLUGIN_PATH . 'includes/class-xlsx-parser.php';
 require_once GFNRI_PLUGIN_PATH . 'includes/class-import-handler.php';
+require_once GFNRI_PLUGIN_PATH . 'includes/class-cron.php';
 
 /**
  * Initialize the plugin.
@@ -42,6 +43,7 @@ function gfnri_init(): void {
     // Initialize main functionality only if Gravity Forms is active.
     if ( class_exists( 'GFForms' ) ) {
         new GFNRI_Import_Handler();
+        GFNRI_Cron::init();
     }
 
     // Register with Guilamu Bug Reporter.
@@ -55,6 +57,7 @@ function gfnri_init(): void {
     }
 }
 add_action( 'plugins_loaded', 'gfnri_init' );
+register_deactivation_hook( __FILE__, array( 'GFNRI_Cron', 'unschedule' ) );
 
 /**
  * Add plugin row meta links (View details, Report a Bug).

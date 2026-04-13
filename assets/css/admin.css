@@ -23,6 +23,89 @@
     margin-bottom: 10px;
 }
 
+/* ── Tabs ─────────────────────────────────────────────────── */
+
+#gfnri-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.gfnri-tab {
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: #3c434a;
+    margin-bottom: -1px;
+    border-radius: 4px 4px 0 0;
+}
+
+.gfnri-tab:hover {
+    background: #f6f7f7;
+}
+
+.gfnri-tab--active {
+    background: #fff;
+    border-color: #ddd;
+    border-bottom-color: #fff;
+    font-weight: 600;
+}
+
+/* ── Panels ───────────────────────────────────────────────── */
+
+.gfnri-panel {
+    display: none;
+    padding-top: 12px;
+}
+
+.gfnri-panel--active {
+    display: block;
+}
+
+/* ── Google Sheets Fields ─────────────────────────────────── */
+
+.gfnri-gsheets-field {
+    margin-bottom: 12px;
+}
+
+.gfnri-gsheets-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    color: #3c434a;
+    margin-bottom: 4px;
+}
+
+.gfnri-gsheets-field select,
+.gfnri-gsheets-field input[type="url"] {
+    width: 100%;
+    max-width: 500px;
+}
+
+.gfnri-gsheets-url-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.gfnri-gsheets-url-row input[type="url"] {
+    flex: 1;
+}
+
+.gfnri-gsheets-url-row .button {
+    flex-shrink: 0;
+}
+
+.gfnri-gsheets-field--actions {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 500px;
+}
+
 .gfnri-title {
     font-weight: 600;
     font-size: 13px;
@@ -177,4 +260,27 @@
 
 #gfnri-warnings li {
     margin-bottom: 2px;
+}
+
+/* ── Sync info ────────────────────────────────────────────── */
+
+#gfnri-gsheets-sync-info {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #3c434a;
+    margin-top: -4px;
+    margin-bottom: 8px;
+}
+
+.gfnri-sync-ok {
+    color: #00a32a;
+}
+
+.gfnri-sync-error {
+    color: #d63638;
+}
+
+.gfnri-sync-time {
+    color: #787c82;
+    font-style: italic;
 }

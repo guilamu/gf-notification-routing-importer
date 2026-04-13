@@ -72,6 +72,116 @@ class GFNRI_Import_Handler {
     public function __construct() {
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'wp_ajax_gfnri_import_routing', array( $this, 'handle_import' ) );
+
+        // Google Sheets integration (requires GC Google Sheets by GravityWiz).
+        add_action( 'wp_ajax_gfnri_gsheets_list_sheets', array( $this, 'handle_gsheets_list_sheets' ) );
+        add_action( 'wp_ajax_gfnri_gsheets_import', array( $this, 'handle_gsheets_import' ) );
+        add_filter( 'gform_pre_notification_save', array( $this, 'save_gsheets_settings' ), 10, 2 );
+    }
+
+    /**
+     * Check whether GC Google Sheets is active and usable.
+     *
+     * @return bool
+     */
+    private static function is_google_sheets_available() {
+        return class_exists( '\GC_Google_Sheets\Accounts\Google_Accounts' )
+            && class_exists( '\GC_Google_Sheets\Spreadsheets\Spreadsheet' )
+            && function_exists( 'gcgs_get_spreadsheet_id_from_url' );
+    }
+
+    /**
+     * Get connected Google accounts as a simple array for JS.
+     *
+     * @return array Array of {email, id} entries.
+     */
+    private static function get_google_accounts_for_js() {
+        if ( ! self::is_google_sheets_available() ) {
+            return array();
+        }
+
+        $accounts = \GC_Google_Sheets\Accounts\Google_Accounts::get_all();
+        $result   = array();
+
+        foreach ( $accounts as $account ) {
+            $email = $account->get_email();
+            if ( $email && $account->is_token_healthy() ) {
+                $result[] = array(
+                    'email' => $email,
+                    'id'    => $account->get_id(),
+                );
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Save Google Sheets connection settings in the notification on save.
+     *
+     * Hooked to `gform_pre_notification_save`.
+     *
+     * @param array $notification The notification being saved.
+     * @param array $form         The current form.
+     * @return array Modified notification.
+     */
+    public function save_gsheets_settings( $notification, $form ) {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- GF verifies the nonce during its save process.
+        $account       = isset( $_POST['gfnri_gsheets_account'] ) ? sanitize_email( wp_unslash( $_POST['gfnri_gsheets_account'] ) ) : '';
+        $url           = isset( $_POST['gfnri_gsheets_url'] ) ? esc_url_raw( wp_unslash( $_POST['gfnri_gsheets_url'] ) ) : '';
+        $sheet_id      = isset( $_POST['gfnri_gsheets_sheet_id'] ) ? sanitize_text_field( wp_unslash( $_POST['gfnri_gsheets_sheet_id'] ) ) : '';
+        $sheet_name    = isset( $_POST['gfnri_gsheets_sheet_name'] ) ? sanitize_text_field( wp_unslash( $_POST['gfnri_gsheets_sheet_name'] ) ) : '';
+        $sync_interval = isset( $_POST['gfnri_gsheets_sync_interval'] ) ? absint( $_POST['gfnri_gsheets_sync_interval'] ) : 0;
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+
+        // Whitelist allowed intervals (minutes).
+        $allowed_intervals = array( 0, 5, 15, 30, 60 );
+
+        if ( ! in_array( $sync_interval, $allowed_intervals, true ) ) {
+            $sync_interval = 0;
+        }
+
+        $has_connection = ! empty( $account ) && ! empty( $url ) && '' !== $sheet_id;
+        $form_id        = isset( $form['id'] ) ? (int) $form['id'] : 0;
+        $nid            = isset( $notification['id'] ) ? $notification['id'] : '';
+
+        if ( $has_connection ) {
+            $notification['gfnri_gsheets_account']       = $account;
+            $notification['gfnri_gsheets_url']           = $url;
+            $notification['gfnri_gsheets_sheet_id']      = $sheet_id;
+            $notification['gfnri_gsheets_sheet_name']    = $sheet_name;
+            $notification['gfnri_gsheets_sync_interval'] = $sync_interval;
+            // Don't set last_sync here — only set by actual cron syncs so the
+            // first cron run can execute immediately instead of waiting an interval.
+        } else {
+            unset( $notification['gfnri_gsheets_account'] );
+            unset( $notification['gfnri_gsheets_url'] );
+            unset( $notification['gfnri_gsheets_sheet_id'] );
+            unset( $notification['gfnri_gsheets_sheet_name'] );
+            unset( $notification['gfnri_gsheets_sync_interval'] );
+            unset( $notification['gfnri_gsheets_last_sync'] );
+            unset( $notification['gfnri_gsheets_sync_status'] );
+            unset( $notification['gfnri_gsheets_sync_message'] );
+        }
+
+        // Maintain the connections index used by the cron.
+        if ( $form_id && $nid ) {
+            $connections = get_option( 'gfnri_gsheets_connections', array() );
+            $key         = $form_id . '_' . $nid;
+
+            if ( $has_connection && $sync_interval > 0 ) {
+                $connections[ $key ] = array(
+                    'form_id' => $form_id,
+                    'nid'     => $nid,
+                );
+            } else {
+                unset( $connections[ $key ] );
+            }
+
+            update_option( 'gfnri_gsheets_connections', $connections, true );
+        }
+
+        return $notification;
     }
 
     /**
@@ -126,6 +236,14 @@ class GFNRI_Import_Handler {
         $form        = GFAPI::get_form( $form_id );
         $form_fields = array();
 
+        // Load notification's saved Google Sheets connection.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
+        $nid = isset( $_GET['nid'] ) ? sanitize_text_field( wp_unslash( $_GET['nid'] ) ) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+        $notification = ( $form && ! empty( $nid ) && isset( $form['notifications'][ $nid ] ) )
+            ? $form['notifications'][ $nid ]
+            : array();
+
         if ( $form && ! empty( $form['fields'] ) ) {
             foreach ( $form['fields'] as $field ) {
                 $form_fields[] = array(
@@ -142,18 +260,54 @@ class GFNRI_Import_Handler {
             'formId'     => $form_id,
             'formFields' => $form_fields,
             'sampleUrl'  => GFNRI_PLUGIN_URL . 'assets/sample-routing-import.csv',
+            'gsheets'    => array(
+                'available' => self::is_google_sheets_available(),
+                'accounts'  => self::get_google_accounts_for_js(),
+            ),
+            'gsheetsSaved' => array(
+                'account'      => isset( $notification['gfnri_gsheets_account'] ) ? $notification['gfnri_gsheets_account'] : '',
+                'url'          => isset( $notification['gfnri_gsheets_url'] ) ? $notification['gfnri_gsheets_url'] : '',
+                'sheetId'      => isset( $notification['gfnri_gsheets_sheet_id'] ) ? $notification['gfnri_gsheets_sheet_id'] : '',
+                'sheetName'    => isset( $notification['gfnri_gsheets_sheet_name'] ) ? $notification['gfnri_gsheets_sheet_name'] : '',
+                'syncInterval' => isset( $notification['gfnri_gsheets_sync_interval'] ) ? (int) $notification['gfnri_gsheets_sync_interval'] : 0,
+                'lastSync'     => isset( $notification['gfnri_gsheets_last_sync'] )
+                    ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $notification['gfnri_gsheets_last_sync'] )
+                    : '',
+                'syncStatus'   => isset( $notification['gfnri_gsheets_sync_status'] ) ? $notification['gfnri_gsheets_sync_status'] : '',
+                'syncMessage'  => isset( $notification['gfnri_gsheets_sync_message'] ) ? $notification['gfnri_gsheets_sync_message'] : '',
+            ),
             'strings'    => array(
-                'importing'      => __( 'Importing…', 'gf-notification-routing-importer' ),
-                'success'        => __( '%d routing rule(s) imported successfully.', 'gf-notification-routing-importer' ),
-                'error'          => __( 'Import failed: %s', 'gf-notification-routing-importer' ),
-                'noFile'         => __( 'Please select a CSV or XLSX file.', 'gf-notification-routing-importer' ),
-                'appendLabel'    => __( 'Append to existing', 'gf-notification-routing-importer' ),
-                'importTitle'    => __( 'Import Routing Rules', 'gf-notification-routing-importer' ),
-                'warningsTitle'  => __( 'Warnings:', 'gf-notification-routing-importer' ),
-                'dropHere'       => __( 'Drop your file here or', 'gf-notification-routing-importer' ),
-                'selectFile'     => __( 'Select a file', 'gf-notification-routing-importer' ),
-                'samplePrefix'   => __( 'Download a sample file:', 'gf-notification-routing-importer' ),
-                'exportBtn'      => __( 'Export Routing Rules', 'gf-notification-routing-importer' ),
+                'importing'            => __( 'Importing…', 'gf-notification-routing-importer' ),
+                'success'              => __( '%d routing rule(s) imported successfully.', 'gf-notification-routing-importer' ),
+                'error'                => __( 'Import failed: %s', 'gf-notification-routing-importer' ),
+                'noFile'               => __( 'Please select a CSV or XLSX file.', 'gf-notification-routing-importer' ),
+                'appendLabel'          => __( 'Append to existing', 'gf-notification-routing-importer' ),
+                'importTitle'          => __( 'Import Routing Rules', 'gf-notification-routing-importer' ),
+                'warningsTitle'        => __( 'Warnings:', 'gf-notification-routing-importer' ),
+                'dropHere'             => __( 'Drop your file here or', 'gf-notification-routing-importer' ),
+                'selectFile'           => __( 'Select a file', 'gf-notification-routing-importer' ),
+                'samplePrefix'         => __( 'Download a sample file:', 'gf-notification-routing-importer' ),
+                'exportBtn'            => __( 'Export Routing Rules', 'gf-notification-routing-importer' ),
+                'gsheetsTab'           => __( 'Google Sheets', 'gf-notification-routing-importer' ),
+                'fileTab'              => __( 'File Upload', 'gf-notification-routing-importer' ),
+                'gsheetsAccount'       => __( 'Google Account', 'gf-notification-routing-importer' ),
+                'gsheetsUrl'           => __( 'Spreadsheet URL', 'gf-notification-routing-importer' ),
+                'gsheetsUrlPlaceholder' => __( 'Paste your Google Sheets URL…', 'gf-notification-routing-importer' ),
+                'gsheetsSheet'         => __( 'Sheet Tab', 'gf-notification-routing-importer' ),
+                'gsheetsLoadSheets'    => __( 'Load Sheets', 'gf-notification-routing-importer' ),
+                'gsheetsImport'        => __( 'Import from Google Sheets', 'gf-notification-routing-importer' ),
+                'gsheetsLoading'       => __( 'Loading sheets…', 'gf-notification-routing-importer' ),
+                'gsheetsSelectAccount' => __( 'Select an account…', 'gf-notification-routing-importer' ),
+                'gsheetsSelectSheet'   => __( 'Select a sheet tab…', 'gf-notification-routing-importer' ),
+                'gsheetsNoAccounts'    => __( 'No Google accounts connected. Connect one in GC Google Sheets settings.', 'gf-notification-routing-importer' ),
+                'gsheetsSync'          => __( 'Auto-sync', 'gf-notification-routing-importer' ),
+                'gsheetsSyncManual'    => __( 'Manual only', 'gf-notification-routing-importer' ),
+                'gsheetsSync5'         => __( 'Every 5 minutes', 'gf-notification-routing-importer' ),
+                'gsheetsSync15'        => __( 'Every 15 minutes', 'gf-notification-routing-importer' ),
+                'gsheetsSync30'        => __( 'Every 30 minutes', 'gf-notification-routing-importer' ),
+                'gsheetsSync60'        => __( 'Every hour', 'gf-notification-routing-importer' ),
+                'gsheetsLastSync'      => __( 'Last synced: %s', 'gf-notification-routing-importer' ),
+                'gsheetsSyncError'     => __( 'Sync error: %s', 'gf-notification-routing-importer' ),
             ),
         ) );
     }
@@ -225,15 +379,214 @@ class GFNRI_Import_Handler {
             wp_send_json_error( array( 'message' => __( 'File must have a header row and at least one data row.', 'gf-notification-routing-importer' ) ) );
         }
 
+        $result = $this->process_rows( $rows, $form );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        if ( empty( $result['routing'] ) ) {
+            wp_send_json_error( array(
+                'message'  => __( 'No valid routing rules found in the file.', 'gf-notification-routing-importer' ),
+                'warnings' => $result['warnings'],
+            ) );
+        }
+
+        wp_send_json_success( $result );
+    }
+
+    /**
+     * Handle AJAX request to list sheets in a Google Spreadsheet.
+     *
+     * @return void
+     */
+    public function handle_gsheets_list_sheets() {
+        if ( ! current_user_can( 'gravityforms_edit_forms' ) && ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'gf-notification-routing-importer' ) ), 403 );
+        }
+
+        if ( ! check_ajax_referer( 'gfnri_import_routing', 'nonce', false ) ) {
+            wp_send_json_error( array( 'message' => __( 'Security check failed.', 'gf-notification-routing-importer' ) ), 403 );
+        }
+
+        if ( ! self::is_google_sheets_available() ) {
+            wp_send_json_error( array( 'message' => __( 'GC Google Sheets is not available.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $spreadsheet_url = isset( $_POST['spreadsheet_url'] ) ? esc_url_raw( wp_unslash( $_POST['spreadsheet_url'] ) ) : '';
+        $account_email   = isset( $_POST['account_email'] ) ? sanitize_email( wp_unslash( $_POST['account_email'] ) ) : '';
+
+        if ( empty( $spreadsheet_url ) ) {
+            wp_send_json_error( array( 'message' => __( 'Please enter a spreadsheet URL.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $spreadsheet_id = gcgs_get_spreadsheet_id_from_url( $spreadsheet_url );
+
+        if ( empty( $spreadsheet_id ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid Google Sheets URL.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        // Find the Google account.
+        $google_account = $this->find_google_account_by_email( $account_email );
+
+        if ( ! $google_account ) {
+            wp_send_json_error( array( 'message' => __( 'Google account not found or not healthy.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        try {
+            $spreadsheet = \GC_Google_Sheets\Spreadsheets\Spreadsheet::get( $spreadsheet_id, null, $google_account );
+
+            if ( ! $spreadsheet || ! $spreadsheet->has_spreadsheet() ) {
+                $error = $spreadsheet ? $spreadsheet->get_error() : __( 'Could not connect to spreadsheet.', 'gf-notification-routing-importer' );
+                wp_send_json_error( array( 'message' => $error ) );
+            }
+
+            $sheets = $spreadsheet->get_sheets();
+
+            if ( empty( $sheets ) ) {
+                wp_send_json_error( array( 'message' => __( 'No sheets found in this spreadsheet.', 'gf-notification-routing-importer' ) ) );
+            }
+
+            $result = array();
+            foreach ( $sheets as $sheet_id => $title ) {
+                $result[] = array(
+                    'id'    => $sheet_id,
+                    'title' => $title,
+                );
+            }
+
+            wp_send_json_success( array( 'sheets' => $result ) );
+        } catch ( \Exception $e ) {
+            wp_send_json_error( array( 'message' => $e->getMessage() ) );
+        }
+    }
+
+    /**
+     * Handle AJAX import from a Google Sheet.
+     *
+     * @return void
+     */
+    public function handle_gsheets_import() {
+        if ( ! current_user_can( 'gravityforms_edit_forms' ) && ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Permission denied.', 'gf-notification-routing-importer' ) ), 403 );
+        }
+
+        if ( ! check_ajax_referer( 'gfnri_import_routing', 'nonce', false ) ) {
+            wp_send_json_error( array( 'message' => __( 'Security check failed.', 'gf-notification-routing-importer' ) ), 403 );
+        }
+
+        if ( ! self::is_google_sheets_available() ) {
+            wp_send_json_error( array( 'message' => __( 'GC Google Sheets is not available.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $spreadsheet_url = isset( $_POST['spreadsheet_url'] ) ? esc_url_raw( wp_unslash( $_POST['spreadsheet_url'] ) ) : '';
+        $account_email   = isset( $_POST['account_email'] ) ? sanitize_email( wp_unslash( $_POST['account_email'] ) ) : '';
+        $sheet_id        = isset( $_POST['sheet_id'] ) ? sanitize_text_field( wp_unslash( $_POST['sheet_id'] ) ) : '';
+        $form_id         = isset( $_POST['form_id'] ) ? absint( $_POST['form_id'] ) : 0;
+
+        if ( empty( $spreadsheet_url ) || empty( $account_email ) || '' === $sheet_id ) {
+            wp_send_json_error( array( 'message' => __( 'Missing required parameters.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        if ( ! $form_id || ! class_exists( 'GFAPI' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid form ID.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $form = GFAPI::get_form( $form_id );
+
+        if ( ! $form ) {
+            wp_send_json_error( array( 'message' => __( 'Form not found.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $spreadsheet_id = gcgs_get_spreadsheet_id_from_url( $spreadsheet_url );
+
+        if ( empty( $spreadsheet_id ) ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid Google Sheets URL.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        $google_account = $this->find_google_account_by_email( $account_email );
+
+        if ( ! $google_account ) {
+            wp_send_json_error( array( 'message' => __( 'Google account not found or not healthy.', 'gf-notification-routing-importer' ) ) );
+        }
+
+        try {
+            $spreadsheet = \GC_Google_Sheets\Spreadsheets\Spreadsheet::get( $spreadsheet_id, $sheet_id, $google_account );
+
+            if ( ! $spreadsheet || ! $spreadsheet->has_spreadsheet() ) {
+                $error = $spreadsheet ? $spreadsheet->get_error() : __( 'Could not connect to spreadsheet.', 'gf-notification-routing-importer' );
+                wp_send_json_error( array( 'message' => $error ) );
+            }
+
+            // Read all data from the sheet (columns A through Z).
+            $range = $spreadsheet->get_sheet_name() . '!A:Z';
+            $rows  = $spreadsheet->read_range( $range );
+
+            if ( false === $rows || empty( $rows ) ) {
+                wp_send_json_error( array( 'message' => __( 'Could not read data from the sheet, or it is empty.', 'gf-notification-routing-importer' ) ) );
+            }
+
+            if ( count( $rows ) < 2 ) {
+                wp_send_json_error( array( 'message' => __( 'Sheet must have a header row and at least one data row.', 'gf-notification-routing-importer' ) ) );
+            }
+
+            $result = $this->process_rows( $rows, $form );
+
+            if ( is_wp_error( $result ) ) {
+                wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+            }
+
+            if ( empty( $result['routing'] ) ) {
+                wp_send_json_error( array(
+                    'message'  => __( 'No valid routing rules found in the sheet.', 'gf-notification-routing-importer' ),
+                    'warnings' => $result['warnings'],
+                ) );
+            }
+
+            wp_send_json_success( $result );
+        } catch ( \Exception $e ) {
+            wp_send_json_error( array( 'message' => $e->getMessage() ) );
+        }
+    }
+
+    /**
+     * Find a Google Account by email from connected accounts.
+     *
+     * @param string $email The account email.
+     * @return \GC_Google_Sheets\Accounts\Google_Account|null
+     */
+    private function find_google_account_by_email( $email ) {
+        if ( empty( $email ) || ! self::is_google_sheets_available() ) {
+            return null;
+        }
+
+        $accounts = \GC_Google_Sheets\Accounts\Google_Accounts::get_all();
+
+        foreach ( $accounts as $account ) {
+            if ( $account->get_email() === $email && $account->is_token_healthy() ) {
+                return $account;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Process parsed rows (from file or Google Sheets) into routing rules.
+     *
+     * @param array $rows 2D array where rows[0] is the header row.
+     * @param array $form The Gravity Forms form object.
+     * @return array|WP_Error Array with 'routing', 'count', and 'warnings' keys.
+     */
+    public function process_rows( $rows, $form ) {
         // Map columns by header name.
         $column_map = $this->detect_columns( $rows[0] );
 
         if ( is_wp_error( $column_map ) ) {
-            wp_send_json_error( array( 'message' => $column_map->get_error_message() ) );
+            return $column_map;
         }
 
         // Build field lookup maps (by ID and by label).
-        // Exclude non-routable field types (page, section, html, captcha, password).
         $field_by_id    = array();
         $field_by_label = array();
 
@@ -317,18 +670,11 @@ class GFNRI_Import_Handler {
             );
         }
 
-        if ( empty( $routing ) ) {
-            wp_send_json_error( array(
-                'message'  => __( 'No valid routing rules found in the file.', 'gf-notification-routing-importer' ),
-                'warnings' => $warnings,
-            ) );
-        }
-
-        wp_send_json_success( array(
+        return array(
             'routing'  => $routing,
             'count'    => count( $routing ),
             'warnings' => $warnings,
-        ) );
+        );
     }
 
     /**

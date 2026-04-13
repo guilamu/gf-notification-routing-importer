@@ -50,6 +50,54 @@ A bare number (e.g., `5`) is also accepted and treated as a field ID.
 - **Secure:** Capability checks, nonce verification, file MIME validation, and XXE protection for XLSX files
 - **GitHub Updates:** Automatic updates from GitHub releases
 
+## Google Sheets Integration
+
+> **Requires** the [GC Google Sheets](https://gravitywiz.com/documentation/gravity-forms-google-sheets/) plugin by GravityWiz.
+
+You can connect a Google Sheet as a live source for routing rules. Once connected, the plugin can keep your notification routing automatically in sync without any manual intervention.
+
+### Setup
+
+1. In **GC Google Sheets**, connect at least one Google account (**GravityWiz → Google Sheets → Accounts**).
+2. Edit a Gravity Forms notification and select **Configure Routing** under "Send To".
+3. In the **Import Routing Rules** panel, switch to the **Google Sheets** tab.
+4. Select your **Google Account**, paste the **Spreadsheet URL**, then click **Load Sheets** and pick the correct **Sheet Tab**.
+5. Click **Import from Google Sheets** to do a one-time import and verify the rules look correct.
+6. Choose an **Auto-sync** interval (see below), then click **Update Notification** to save.
+
+### Spreadsheet Format
+
+The sheet must follow the same four-column format as CSV/XLSX files — the header row can appear in any order:
+
+| email | field | operator | value |
+|-------|-------|----------|-------|
+| `sales@acme.com` | `Department` | `is` | `Sales` |
+| `support@acme.com` | `Last name` | `is not` | `roger` |
+
+Column names are case-insensitive. See [Column Details](#column-details) for accepted aliases and operator values.
+
+### Auto-sync
+
+Once saved, the plugin can update routing rules automatically whenever the sheet changes:
+
+| Interval | Behaviour |
+|----------|-----------|
+| **Manual only** | Rules are only updated when you click "Import from Google Sheets" |
+| **Every 5 minutes** | Routing is refreshed every 5 minutes |
+| **Every 15 minutes** | Routing is refreshed every 15 minutes |
+| **Every 30 minutes** | Routing is refreshed every 30 minutes |
+| **Every hour** | Routing is refreshed every hour |
+
+The sync runs via WP-Cron. If WP-Cron is disabled or loopback HTTP requests are unavailable in your environment (common with Docker or server-side cron setups), the plugin automatically falls back to running the sync on the next admin page load instead.
+
+The last sync time and status (success or error) are displayed below the Auto-sync dropdown.
+
+> **Note:** The notification routing rules are updated silently in the background. Gravity Forms does **not** need to be re-saved — the routing saved in the database is updated directly.
+
+### Removing the Connection
+
+To disconnect a Google Sheet, switch back to the **File Upload** tab before saving the notification. The connection and its auto-sync schedule are cleared automatically.
+
 ## Requirements
 
 - WordPress 5.8 or higher
@@ -113,6 +161,12 @@ The plugin auto-detects whether your CSV uses `,` or `;` as the separator.
 ```
 
 ## Changelog
+
+### 1.1.0
+- Google Sheets integration: use a Google Sheet as a routing source (requires GC Google Sheets by GravityWiz)
+- Auto-sync: automatically update routing rules from Google Sheets on a configurable interval (5 min / 15 min / 30 min / 1 hour)
+- Persistent Google Sheets connection: settings are saved with the notification
+- Admin-init fallback for environments where WP-Cron does not fire
 
 ### 1.0.0
 - Initial release
